@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --pd-blue: #0066FF;
+  --pd-dark: #0A1628;
+  --pd-gray: #1E293B;
+  --pd-light: #F8FAFC;
+  --pd-accent: #00D4FF;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--pd-dark);
+  color: var(--pd-light);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Gradient backgrounds */
+.gradient-dark {
+  background: linear-gradient(135deg, #0A1628 0%, #1E293B 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glow-blue {
+  box-shadow: 0 0 40px rgba(0, 102, 255, 0.3);
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--pd-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--pd-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--pd-blue);
 }
