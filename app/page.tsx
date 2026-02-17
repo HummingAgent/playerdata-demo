@@ -1,291 +1,346 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
+import DashboardLayout from './components/DashboardLayout';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Ticket, 
+  Clock, 
+  Star, 
+  Bot,
+  ArrowUpRight,
+  MoreVertical,
+  CheckCircle2,
+  AlertCircle,
+  MessageSquare
+} from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line
+} from 'recharts';
 
 // Mock data
-const mockTickets = [
-  { id: 'TKT-2847', customer: 'IMG Academy', product: 'Edge Air v3', status: 'ai-drafted', priority: 'vip', subject: 'Battery calibration issue during tournament', time: '2h ago' },
-  { id: 'TKT-2846', customer: 'Crystal Palace FC', product: 'Edge Air v3', status: 'pending', priority: 'vip', subject: 'Live data sync delay', time: '3h ago' },
-  { id: 'TKT-2845', customer: 'Allen High School', product: 'Edge Air v2', status: 'ai-drafted', priority: 'normal', subject: 'App not showing historical data', time: '4h ago' },
-  { id: 'TKT-2844', customer: 'Boston Bolts', product: 'IMU System', status: 'resolved', priority: 'normal', subject: 'Indoor tracking setup help', time: '5h ago' },
-  { id: 'TKT-2843', customer: 'Villanova', product: 'Edge Air v3', status: 'ai-drafted', priority: 'normal', subject: 'Export data to CSV format', time: '6h ago' },
+const ticketTrend = [
+  { name: 'Mon', tickets: 45, resolved: 42 },
+  { name: 'Tue', tickets: 52, resolved: 48 },
+  { name: 'Wed', tickets: 38, resolved: 36 },
+  { name: 'Thu', tickets: 65, resolved: 58 },
+  { name: 'Fri', tickets: 48, resolved: 45 },
+  { name: 'Sat', tickets: 23, resolved: 22 },
+  { name: 'Sun', tickets: 18, resolved: 17 },
 ];
 
-const mockMetrics = {
-  ticketsToday: 23,
-  aiResolved: 18,
-  avgResponseTime: '4m',
-  satisfaction: 98,
-  vipTickets: 3,
-  overnightDrafts: 7,
-};
+const responseTime = [
+  { time: '00:00', value: 4.2 },
+  { time: '04:00', value: 3.8 },
+  { time: '08:00', value: 5.1 },
+  { time: '12:00', value: 4.5 },
+  { time: '16:00', value: 3.9 },
+  { time: '20:00', value: 4.0 },
+];
 
-const productVersions = [
-  { name: 'Edge Air v3', tickets: 45, health: 'good' },
-  { name: 'Edge Air v2', tickets: 28, health: 'good' },
-  { name: 'Edge Air v1', tickets: 12, health: 'warning' },
-  { name: 'IMU System', tickets: 8, health: 'good' },
-  { name: 'Smart Ball', tickets: 3, health: 'good' },
+const productBreakdown = [
+  { name: 'Edge Air v3', value: 45, color: '#0066FF' },
+  { name: 'Edge Air v2', value: 28, color: '#00D4FF' },
+  { name: 'Edge Air v1', value: 15, color: '#6366F1' },
+  { name: 'IMU System', value: 8, color: '#8B5CF6' },
+  { name: 'Smart Ball', value: 4, color: '#A855F7' },
+];
+
+const recentTickets = [
+  { id: 'TKT-2847', customer: 'IMG Academy', subject: 'Battery calibration issue', status: 'ai-draft', priority: 'vip', time: '2h' },
+  { id: 'TKT-2846', customer: 'Crystal Palace FC', subject: 'Live data sync delay', status: 'pending', priority: 'vip', time: '3h' },
+  { id: 'TKT-2845', customer: 'Allen High School', subject: 'App historical data', status: 'ai-draft', priority: 'normal', time: '4h' },
+  { id: 'TKT-2844', customer: 'Boston Bolts', subject: 'Indoor tracking setup', status: 'resolved', priority: 'normal', time: '5h' },
+];
+
+const agentActivity = [
+  { agent: 'Edge Air v3 Agent', queries: 156, accuracy: 98 },
+  { agent: 'Edge Air v2 Agent', queries: 89, accuracy: 96 },
+  { agent: 'General Support', queries: 234, accuracy: 94 },
+  { agent: 'IMU Specialist', queries: 45, accuracy: 99 },
 ];
 
 export default function Dashboard() {
   const { data: session } = useSession();
-  const [selectedTicket, setSelectedTicket] = useState(mockTickets[0]);
-  const [chatMessage, setChatMessage] = useState('');
 
   return (
-    <div className="min-h-screen gradient-dark">
-      {/* Header */}
-      <header className="border-b border-white/10 px-6 py-4">
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-[#0066FF] flex items-center justify-center font-bold text-xl">
-              PD
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">PlayerData</h1>
-              <p className="text-sm text-gray-400">Support Intelligence Hub</p>
-            </div>
+    <DashboardLayout>
+      <div className="p-4 lg:p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-gray-400 text-sm">Welcome back, {session?.user?.name?.split(' ')[0]}</p>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/20 text-green-400">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              <span className="text-sm font-medium">AI Agent Active</span>
+              <span className="text-sm font-medium">AI Active</span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium">{session?.user?.name}</p>
-                <p className="text-xs text-gray-400">{session?.user?.email}</p>
+            <button className="px-4 py-2 bg-[#0066FF] rounded-lg text-sm font-medium hover:bg-[#0055DD] transition-colors">
+              New Ticket
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            label="Total Tickets"
+            value="289"
+            change="+12%"
+            trend="up"
+            icon={<Ticket className="text-[#0066FF]" size={20} />}
+          />
+          <StatCard
+            label="AI Resolved"
+            value="78%"
+            change="+5%"
+            trend="up"
+            icon={<Bot className="text-[#00D4FF]" size={20} />}
+          />
+          <StatCard
+            label="Avg Response"
+            value="4.2m"
+            change="-18%"
+            trend="down"
+            icon={<Clock className="text-purple-400" size={20} />}
+          />
+          <StatCard
+            label="Satisfaction"
+            value="98%"
+            change="+2%"
+            trend="up"
+            icon={<Star className="text-amber-400" size={20} />}
+          />
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Ticket Trend Chart */}
+          <div className="lg:col-span-2 bg-[#1E293B]/50 rounded-2xl p-4 lg:p-6 border border-white/5">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold">Ticket Volume</h3>
+                <p className="text-sm text-gray-400">Last 7 days</p>
               </div>
-              <button 
-                onClick={() => signOut()}
-                className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              >
-                Sign Out
-              </button>
+              <select className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm">
+                <option>This Week</option>
+                <option>Last Week</option>
+                <option>This Month</option>
+              </select>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={ticketTrend}>
+                  <defs>
+                    <linearGradient id="ticketGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0066FF" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#0066FF" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="resolvedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#00D4FF" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} />
+                  <YAxis stroke="#9CA3AF" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1E293B', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Area type="monotone" dataKey="tickets" stroke="#0066FF" fill="url(#ticketGradient)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="resolved" stroke="#00D4FF" fill="url(#resolvedGradient)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center gap-6 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#0066FF]"></span>
+                <span className="text-sm text-gray-400">Incoming</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#00D4FF]"></span>
+                <span className="text-sm text-gray-400">Resolved</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Breakdown */}
+          <div className="bg-[#1E293B]/50 rounded-2xl p-4 lg:p-6 border border-white/5">
+            <h3 className="font-semibold mb-6">By Product</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={productBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {productBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1E293B', 
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '8px'
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-2 mt-4">
+              {productBreakdown.map((item) => (
+                <div key={item.name} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    <span className="text-gray-300">{item.name}</span>
+                  </div>
+                  <span className="text-gray-400">{item.value}%</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-[1800px] mx-auto p-6">
-        {/* Metrics Row */}
-        <div className="grid grid-cols-6 gap-4 mb-6">
-          <MetricCard label="Tickets Today" value={mockMetrics.ticketsToday.toString()} icon="📥" />
-          <MetricCard label="AI Resolved" value={mockMetrics.aiResolved.toString()} icon="🤖" accent />
-          <MetricCard label="Avg Response" value={mockMetrics.avgResponseTime} icon="⚡" />
-          <MetricCard label="Satisfaction" value={`${mockMetrics.satisfaction}%`} icon="⭐" />
-          <MetricCard label="VIP Active" value={mockMetrics.vipTickets.toString()} icon="👑" warning />
-          <MetricCard label="Overnight Drafts" value={mockMetrics.overnightDrafts.toString()} icon="🌙" accent />
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Column - Ticket Queue */}
-          <div className="col-span-4 gradient-card rounded-2xl p-5">
+        {/* Bottom Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Recent Tickets */}
+          <div className="bg-[#1E293B]/50 rounded-2xl p-4 lg:p-6 border border-white/5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Ticket Queue</h2>
-              <div className="flex gap-2">
-                <button className="px-3 py-1 text-xs rounded-full bg-[#0066FF]/20 text-[#0066FF]">All</button>
-                <button className="px-3 py-1 text-xs rounded-full bg-white/5 text-gray-400 hover:bg-white/10">VIP</button>
-                <button className="px-3 py-1 text-xs rounded-full bg-white/5 text-gray-400 hover:bg-white/10">AI Ready</button>
-              </div>
+              <h3 className="font-semibold">Recent Tickets</h3>
+              <button className="text-sm text-[#0066FF] hover:underline">View All</button>
             </div>
             <div className="space-y-3">
-              {mockTickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  onClick={() => setSelectedTicket(ticket)}
-                  className={`p-4 rounded-xl cursor-pointer transition-all ${
-                    selectedTicket.id === ticket.id
-                      ? 'bg-[#0066FF]/20 border border-[#0066FF]/50'
-                      : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
+              {recentTickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center
+                    ${ticket.status === 'resolved' ? 'bg-green-500/20 text-green-400' : 
+                      ticket.status === 'ai-draft' ? 'bg-[#00D4FF]/20 text-[#00D4FF]' : 
+                      'bg-amber-500/20 text-amber-400'}
+                  `}>
+                    {ticket.status === 'resolved' ? <CheckCircle2 size={20} /> : 
+                     ticket.status === 'ai-draft' ? <Bot size={20} /> : 
+                     <AlertCircle size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-gray-400">{ticket.id}</span>
+                      <span className="text-sm font-medium truncate">{ticket.subject}</span>
                       {ticket.priority === 'vip' && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400">VIP</span>
-                      )}
-                      {ticket.status === 'ai-drafted' && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-[#00D4FF]/20 text-[#00D4FF]">AI Draft Ready</span>
+                        <span className="px-1.5 py-0.5 text-xs rounded bg-amber-500/20 text-amber-400">VIP</span>
                       )}
                     </div>
-                    <span className="text-xs text-gray-500">{ticket.time}</span>
+                    <p className="text-xs text-gray-400">{ticket.customer} • {ticket.id}</p>
                   </div>
-                  <p className="font-medium text-sm mb-1">{ticket.subject}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <span>{ticket.customer}</span>
-                    <span>•</span>
-                    <span>{ticket.product}</span>
-                  </div>
+                  <span className="text-xs text-gray-500">{ticket.time}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Center Column - AI Response */}
-          <div className="col-span-5 gradient-card rounded-2xl p-5">
+          {/* AI Agent Activity */}
+          <div className="bg-[#1E293B]/50 rounded-2xl p-4 lg:p-6 border border-white/5">
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-semibold">AI Response Draft</h2>
-                <p className="text-sm text-gray-400">{selectedTicket.id} • {selectedTicket.customer}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20">
-                  Regenerate
-                </button>
-                <button className="px-4 py-2 text-sm rounded-lg bg-[#0066FF] hover:bg-[#0055DD]">
-                  Send Response
-                </button>
-              </div>
+              <h3 className="font-semibold">AI Agent Performance</h3>
+              <button className="p-1 hover:bg-white/10 rounded">
+                <MoreVertical size={18} className="text-gray-400" />
+              </button>
             </div>
-
-            {/* Product Info Banner */}
-            <div className="mb-4 p-3 rounded-lg bg-white/5 border border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-[#0066FF]/20 flex items-center justify-center">
-                  📡
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Detected Product: {selectedTicket.product}</p>
-                  <p className="text-xs text-gray-400">Firmware: v3.2.1 • Last Sync: 2 days ago • Battery: 78%</p>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Draft */}
-            <div className="bg-white/5 rounded-xl p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-6 h-6 rounded-full bg-[#00D4FF]/20 flex items-center justify-center text-xs">🤖</span>
-                <span className="text-sm font-medium text-[#00D4FF]">AI Generated Response</span>
-              </div>
-              <div className="text-sm text-gray-300 space-y-3">
-                <p>Hi Team,</p>
-                <p>Thank you for reaching out about the battery calibration issue you experienced during the tournament.</p>
-                <p>Based on your Edge Air v3 devices (firmware v3.2.1), this appears to be related to the extended tracking mode being enabled. Here are the recommended steps:</p>
-                <ol className="list-decimal ml-4 space-y-1">
-                  <li>Open the PlayerData app and navigate to Settings → Device Management</li>
-                  <li>Select each affected unit and tap "Recalibrate Battery"</li>
-                  <li>Ensure units are charged to 100% before the next session</li>
-                  <li>If the issue persists, enable "Tournament Mode" which optimizes battery usage</li>
-                </ol>
-                <p>I have also flagged this for our engineering team as we are seeing a pattern with v3.2.1 firmware. A patch will be included in the next update.</p>
-                <p>Let me know if you need any additional assistance!</p>
-              </div>
-            </div>
-
-            {/* Knowledge Sources */}
-            <div className="border-t border-white/10 pt-4">
-              <p className="text-xs text-gray-400 mb-2">Sources Used</p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 text-xs rounded bg-white/5">📄 Edge Air v3 Manual</span>
-                <span className="px-2 py-1 text-xs rounded bg-white/5">💬 Similar Ticket #2801</span>
-                <span className="px-2 py-1 text-xs rounded bg-white/5">📋 Battery Calibration SOP</span>
-                <span className="px-2 py-1 text-xs rounded bg-white/5">🐛 Known Issue KB-445</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Product Agents & Chat */}
-          <div className="col-span-3 space-y-6">
-            {/* Product Agents */}
-            <div className="gradient-card rounded-2xl p-5">
-              <h2 className="text-lg font-semibold mb-4">Product Agents</h2>
-              <div className="space-y-3">
-                {productVersions.map((product) => (
-                  <div key={product.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${product.health === 'good' ? 'bg-green-400' : 'bg-amber-400'}`}></div>
-                      <span className="text-sm font-medium">{product.name}</span>
+            <div className="space-y-4">
+              {agentActivity.map((agent) => (
+                <div key={agent.agent} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-300">{agent.agent}</span>
+                    <span className="text-gray-400">{agent.queries} queries</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-[#0066FF] to-[#00D4FF] rounded-full"
+                        style={{ width: `${agent.accuracy}%` }}
+                      ></div>
                     </div>
-                    <span className="text-xs text-gray-400">{product.tickets} tickets</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Internal Chat */}
-            <div className="gradient-card rounded-2xl p-5 flex-1">
-              <h2 className="text-lg font-semibold mb-4">Ask Knowledge Base</h2>
-              <div className="bg-white/5 rounded-xl p-4 mb-4 h-40 overflow-y-auto">
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-2">
-                    <span className="text-gray-400">You:</span>
-                    <span>What&apos;s the battery life for Edge Air v3?</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-[#00D4FF]">AI:</span>
-                    <span className="text-gray-300">Edge Air v3 has 8+ hours battery life in standard mode, 5 hours in extended tracking mode with GPS + LPS enabled.</span>
+                    <span className="text-sm font-medium text-[#00D4FF]">{agent.accuracy}%</span>
                   </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Ask about any product..."
-                  className="flex-1 px-4 py-2 rounded-lg bg-white/10 border border-white/10 text-sm focus:outline-none focus:border-[#0066FF]"
-                />
-                <button className="px-4 py-2 rounded-lg bg-[#0066FF] hover:bg-[#0055DD]">
-                  Ask
-                </button>
+              ))}
+            </div>
+            
+            {/* Response Time Mini Chart */}
+            <div className="mt-6 pt-4 border-t border-white/10">
+              <p className="text-sm text-gray-400 mb-3">Response Time (minutes)</p>
+              <div className="h-24">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={responseTime}>
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#00D4FF" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1E293B', 
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Bottom Stats */}
-        <div className="mt-6 grid grid-cols-4 gap-4">
-          <div className="gradient-card rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">HubSpot</span>
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-            </div>
-            <p className="text-2xl font-bold">Connected</p>
-            <p className="text-xs text-gray-500">Last sync: 2 min ago</p>
-          </div>
-          <div className="gradient-card rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Notion</span>
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-            </div>
-            <p className="text-2xl font-bold">847 docs</p>
-            <p className="text-xs text-gray-500">Indexed & searchable</p>
-          </div>
-          <div className="gradient-card rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Gong</span>
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-            </div>
-            <p className="text-2xl font-bold">156 calls</p>
-            <p className="text-xs text-gray-500">Transcripts analyzed</p>
-          </div>
-          <div className="gradient-card rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Slack</span>
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-            </div>
-            <p className="text-2xl font-bold">12 channels</p>
-            <p className="text-xs text-gray-500">Monitoring active</p>
-          </div>
-        </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
 
-function MetricCard({ label, value, icon, accent, warning }: { label: string; value: string; icon: string; accent?: boolean; warning?: boolean }) {
+function StatCard({ label, value, change, trend, icon }: { 
+  label: string; 
+  value: string; 
+  change: string;
+  trend: 'up' | 'down';
+  icon: React.ReactNode;
+}) {
   return (
-    <div className={`gradient-card rounded-xl p-4 ${accent ? 'glow-blue' : ''}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xl">{icon}</span>
-        <span className="text-xs text-gray-400">{label}</span>
+    <div className="bg-[#1E293B]/50 rounded-2xl p-4 lg:p-5 border border-white/5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="p-2 rounded-lg bg-white/5">{icon}</div>
+        <div className={`flex items-center gap-1 text-xs ${trend === 'up' ? 'text-green-400' : 'text-red-400'}`}>
+          {trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+          {change}
+        </div>
       </div>
-      <p className={`text-2xl font-bold ${accent ? 'text-[#00D4FF]' : warning ? 'text-amber-400' : ''}`}>{value}</p>
+      <p className="text-2xl lg:text-3xl font-bold">{value}</p>
+      <p className="text-sm text-gray-400 mt-1">{label}</p>
     </div>
   );
 }
