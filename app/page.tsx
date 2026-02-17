@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import { useSession, signOut } from 'next-auth/react';
 
 // Mock data
 const mockTickets = [
@@ -30,6 +30,7 @@ const productVersions = [
 ];
 
 export default function Dashboard() {
+  const { data: session } = useSession();
   const [selectedTicket, setSelectedTicket] = useState(mockTickets[0]);
   const [chatMessage, setChatMessage] = useState('');
 
@@ -52,9 +53,17 @@ export default function Dashboard() {
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
               <span className="text-sm font-medium">AI Agent Active</span>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Powered by</p>
-              <p className="text-sm font-semibold text-[#00D4FF]">HummingAgent</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium">{session?.user?.name}</p>
+                <p className="text-xs text-gray-400">{session?.user?.email}</p>
+              </div>
+              <button 
+                onClick={() => signOut()}
+                className="px-3 py-1.5 text-xs rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
